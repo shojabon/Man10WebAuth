@@ -1,0 +1,7 @@
+{
+    "code": 500,
+    "message": {
+        "jp": "APIユーザーがすでに存在します",
+        "en": "API User already exists."
+    }
+}

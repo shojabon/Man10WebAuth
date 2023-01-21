@@ -1,14 +1,11 @@
 import json
-import time
-import traceback
-from threading import Thread
 
-import humps
+import pymongo
 from flask import Flask
 from pymongo import MongoClient
 
 from Man10WebAuth.manager.Man10WebAuthAPI import Man10WebAuthAPI
-from Man10WebAuth.methods.shop import Man10WebAuthMethods
+from Man10WebAuth.methods import Man10WebAuthMethods
 
 
 class Man10WebAuth:
@@ -27,12 +24,15 @@ class Man10WebAuth:
 
         self.mongo = MongoClient(self.config["mongodbConnectionString"])
 
+        # make database unique
+        self.mongo["man10_web_auth"]["accounts"].create_index([("minecraftUuid", pymongo.ASCENDING)], unique=True)
+        self.mongo["man10_web_auth"]["accounts"].create_index([("username", pymongo.ASCENDING)], unique=True)
         self.api = Man10WebAuthAPI(self)
-        print(self.api.register_account("Sho0", "test", "ffa9b4cb-ada1-4597-ad24-10e318f994c8"))
+        # print(self.api.register_account("Sho0", "test", "ffa9b4cb-ada1-4597-ad24-10e318f994c8"))
         # print(self.api.login("Sho0", "test"))
         # print(self.api.logout("a83b045d-9b45-48bb-b2b9-463e73a9024a"))
 
         self.methods = Man10WebAuthMethods(self)
 
-        # self.flask.run("0.0.0.0", self.config["hostPort"], threaded=True)
+        self.flask.run("0.0.0.0", self.config["hostPort"], threaded=True)
         self.running = False

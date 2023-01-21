@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import json
 import traceback
 import uuid
@@ -8,6 +9,7 @@ from typing import TYPE_CHECKING, Optional
 import humps
 import jwt
 import requests
+from pymongo.errors import DuplicateKeyError
 
 if TYPE_CHECKING:
     from Man10WebAuth import Man10WebAuth
@@ -42,32 +44,59 @@ class Man10WebAuthAPI:
             traceback.print_exc()
             return None
 
-    def register_account(self, username: str, password: str, account_uuid: str):
+    def get_user_object(self, minecraft_uuid: str=None, username: str=None, kong_id: str=None):
         try:
-            result: dict = self.http_request("/consumers", "POST", {
-                "custom_id": account_uuid,
-                "username": account_uuid
-            })
-            if "id" not in result:
-                return "kong_consumer_exists", False
-            kong_id = result["id"]
+            query = {}
+            if minecraft_uuid is not None:
+                query["minecraftUuid"] = minecraft_uuid
+            if username is not None:
+                query["username"] = username
+            if kong_id is not None:
+                query["kongId"] = kong_id
+            user_object = self.main.mongo["man10_web_auth"]["accounts"].find_one(query)
+            return "success", user_object
+        except Exception:
+            return "error_internal", None
 
-            update_result = self.main.mongo["man10_web_auth"]["accounts"].update_one({
-                "minecraftUuid": account_uuid
+    def register_account(self, username: str, password: str, minecraft_uuid: str):
+        try:
+
+            self.main.mongo["man10_web_auth"]["accounts"].update_one({
+                "minecraftUuid": minecraft_uuid
             }, {
                 "$set": {
                     "username": username,
-                    "password": password,
+                    "password": password
+                }
+            }, upsert=True)
+
+            request_data = self.http_request("/consumers", "POST", {
+                "custom_id": minecraft_uuid,
+                "username": minecraft_uuid
+            })
+            if request_data is None:
+                return "kong_consumer_exists", False
+            if "id" not in request_data:
+                return "kong_consumer_exists", False
+            kong_id = request_data["id"]
+
+            self.main.mongo["man10_web_auth"]["accounts"].update_one({
+                "minecraftUuid": minecraft_uuid
+            }, {
+                "$set": {
                     "kongId": kong_id
                 }
             }, upsert=True)
 
-            result = self.http_request("/consumers/" + result["id"] + "/acls", "POST", {
+            result = self.http_request("/consumers/" + request_data["id"] + "/acls", "POST", {
                 "group": "Guest"
             })
             if "code" in result:
                 return "kong_consumer_group_error", False
             return "success", True
+        except DuplicateKeyError:
+            traceback.print_exc()
+            return "account_exists", False
         except Exception:
             traceback.print_exc()
             return "error_internal", False
@@ -84,21 +113,25 @@ class Man10WebAuthAPI:
             jwt_request: dict = self.http_request("/consumers/" + result["kongId"] + "/jwt", "POST", {})
             jwt_token = jwt.encode({
                 "iss": jwt_request["key"],
-                "minecraftUuid": result["minecraftUuid"]
+                "minecraftUuid": result["minecraftUuid"],
+                "exp": round(datetime.datetime.now().timestamp() + self.main.config["jwtExpiration"])
             }, jwt_request["secret"])
             return "success", jwt_token
         except Exception:
             traceback.print_exc()
             return "error_internal",None
 
-    def logout(self, kong_uuid: str):
+    def logout(self, minecraft_uuid: str):
         try:
-            tokens = self.http_request("/consumers/" + kong_uuid + "/jwt", "GET", {})
+            user_data, request_result = self.get_user_object(minecraft_uuid=minecraft_uuid)
+            if user_data is None:
+                return request_result, False
+            tokens: dict = self.http_request("/consumers/" + user_data["kongId"] + "/jwt", "GET", {})
             if tokens is None:
                 return "account_invalid", False
             tokens = [x["id"] for x in tokens["data"]]
             for token in tokens:
-                self.http_request("/consumers/" + kong_uuid + "/jwt/" + token, "DELETE", {})
+                self.http_request("/consumers/" + user_data["kongId"] + "/jwt/" + token, "DELETE", {})
             return "success", True
         except Exception:
             traceback.print_exc()
@@ -108,6 +141,9 @@ class Man10WebAuthAPI:
         try:
             self.main.mongo["man10_web_auth"]["accounts"].update_one({"minecraftUuid": minecraft_uuid}, {"$set": data})
             return "success", True
+        except DuplicateKeyError:
+            traceback.print_exc()
+            return "account_exists", False
         except Exception:
             traceback.print_exc()
             return "error_internal", False

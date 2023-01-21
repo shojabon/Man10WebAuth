@@ -10,32 +10,33 @@ if TYPE_CHECKING:
     from Man10WebAuth.methods.shop import Man10WebAuthMethods
 
 
-class UpdateInformationMethod:
+class LoginAccountMethod:
 
     def __init__(self, methods: Man10WebAuthMethods):
         self.methods = methods
         self.schema = {
             "type": "object",
             "properties": {
-                "minecraftUuid": {
+                "minecraftUsername": {
                     "type": "string"
                 },
-                "data": {
-                    "type": "object"
+                "password": {
+                    "type": "string"
                 }
             },
-            "required": ["minecraftUuid", "data"]
+            "required": ["minecraftUsername", "password"]
         }
 
         self.register_endpoint()
 
     def register_endpoint(self):
-        @self.methods.blueprint.route("update", methods=["POST"])
+
+        @self.methods.blueprint.route("/login", methods=["POST"])
         @flask_mat_response_wrapper()
         @flask_json_schema(self.schema)
-        def update_info(json_body: dict):
+        def login(json_body: dict):
             try:
-                result = self.methods.main.api.update_information(json_body["minecraft_uuid"], json_body["data"])
+                result = self.methods.main.api.login(json_body["minecraft_username"], json_body["password"])
                 if result[1] is None:
                     return result[0]
                 return "success", result[1]

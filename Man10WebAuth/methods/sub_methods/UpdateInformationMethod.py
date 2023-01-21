@@ -7,37 +7,38 @@ from utils.JsonSchemaWrapper import flask_json_schema
 from utils.MatResponseWrapper import flask_mat_response_wrapper
 
 if TYPE_CHECKING:
-    from Man10WebAuth.methods.shop import Man10WebAuthMethods
+    from Man10WebAuth import Man10WebAuthMethods
 
 
-class LoginAccountMethod:
+class UpdateInformationMethod:
 
     def __init__(self, methods: Man10WebAuthMethods):
         self.methods = methods
         self.schema = {
             "type": "object",
             "properties": {
-                "minecraftUsername": {
+                "minecraftUUID": {
                     "type": "string"
                 },
-                "password": {
-                    "type": "string"
+                "data": {
+                    "type": "object"
                 }
             },
-            "required": ["minecraftUsername", "password"]
+            "required": ["minecraftUUID", "data"]
         }
 
         self.register_endpoint()
 
     def register_endpoint(self):
-        @self.methods.blueprint.route("login", methods=["POST"])
+        @self.methods.blueprint.route("/update", methods=["POST"])
         @flask_mat_response_wrapper()
         @flask_json_schema(self.schema)
-        def login(json_body: dict):
+        def update_info(json_body: dict):
             try:
-                result = self.methods.main.api.login(json_body["minecraft_username"], json_body["password"])
-                if result[1] is None:
+                result = self.methods.main.api.update_information(json_body["minecraft_uuid"], json_body["data"])
+                if not result[1]:
                     return result[0]
+                self.methods.main.api.logout(json_body["minecraft_uuid"])
                 return "success", result[1]
             except Exception as e:
                 traceback.print_exc()

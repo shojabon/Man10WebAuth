@@ -33,12 +33,12 @@ class RegisterAccountMethod:
         self.register_endpoint()
 
     def register_endpoint(self):
-        @self.methods.blueprint.route("register", methods=["POST"])
+        @self.methods.blueprint.route("/register", methods=["POST"])
         @flask_mat_response_wrapper()
         @flask_json_schema(self.schema)
         def register_account(json_body: dict):
             try:
-                result = self.methods.main.api.register_account(json_body["minecraft_username"], json_body["minecraft_uuid"], json_body["password"])
+                result = self.methods.main.api.register_account(json_body["minecraft_username"], json_body["password"], json_body["minecraft_uuid"])
                 if not result[1]:
                     return result[0]
                 return "success"
