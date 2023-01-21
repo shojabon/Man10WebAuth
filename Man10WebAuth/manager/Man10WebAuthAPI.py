@@ -79,35 +79,35 @@ class Man10WebAuthAPI:
                 "password": password
             })
             if result is None:
-                return None
+                return "account_invalid", None
 
             jwt_request: dict = self.http_request("/consumers/" + result["kongId"] + "/jwt", "POST", {})
             jwt_token = jwt.encode({
                 "iss": jwt_request["key"],
                 "minecraftUuid": result["minecraftUuid"]
             }, jwt_request["secret"])
-            return jwt_token
+            return "success", jwt_token
         except Exception:
             traceback.print_exc()
-            return None
+            return "error_internal",None
 
     def logout(self, kong_uuid: str):
         try:
             tokens = self.http_request("/consumers/" + kong_uuid + "/jwt", "GET", {})
             if tokens is None:
-                return False
+                return "account_invalid", False
             tokens = [x["id"] for x in tokens["data"]]
             for token in tokens:
                 self.http_request("/consumers/" + kong_uuid + "/jwt/" + token, "DELETE", {})
-
+            return "success", True
         except Exception:
             traceback.print_exc()
-            return False
+            return "error_internal",False
 
     def update_information(self, minecraft_uuid: str, data: dict):
         try:
             self.main.mongo["man10_web_auth"]["accounts"].update_one({"minecraftUuid": minecraft_uuid}, {"$set": data})
-            return True
+            return "success", True
         except Exception:
             traceback.print_exc()
-            return False
+            return "error_internal", False
