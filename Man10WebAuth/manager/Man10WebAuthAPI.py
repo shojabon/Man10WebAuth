@@ -49,7 +49,7 @@ class Man10WebAuthAPI:
                 "username": account_uuid
             })
             if "id" not in result:
-                return False
+                return "kong_consumer_exists", False
             kong_id = result["id"]
 
             update_result = self.main.mongo["man10_web_auth"]["accounts"].update_one({
@@ -62,13 +62,15 @@ class Man10WebAuthAPI:
                 }
             }, upsert=True)
 
-            self.http_request("/consumers/" + result["id"] + "/acls", "POST", {
+            result = self.http_request("/consumers/" + result["id"] + "/acls", "POST", {
                 "group": "Guest"
             })
-            return True
+            if "code" in result:
+                return "kong_consumer_group_error", False
+            return "success", True
         except Exception:
             traceback.print_exc()
-            return False
+            return "error_internal", False
 
     def login(self, name: str, password: str):
         try:
