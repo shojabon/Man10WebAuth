@@ -1,0 +1,7 @@
+{
+    "code": 500,
+    "message": {
+        "jp": "割り当て可能なポートが存在しません",
+        "en": "Allocatable port exhausted"
+    }
+}

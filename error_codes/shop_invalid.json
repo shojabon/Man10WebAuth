@@ -1,0 +1,7 @@
+{
+    "code": 404,
+    "message": {
+        "jp": "ショップが存在しません",
+        "en": "Shop doesn't exist."
+    }
+}

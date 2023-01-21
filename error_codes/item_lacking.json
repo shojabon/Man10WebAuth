@@ -1,0 +1,7 @@
+{
+    "code": 500,
+    "message": {
+        "jp": "アイテムが不足しているか存在しません",
+        "en": "Item is missing or does not exist."
+    }
+}

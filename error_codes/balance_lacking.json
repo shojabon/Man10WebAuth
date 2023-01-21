@@ -1,0 +1,7 @@
+{
+    "code": 500,
+    "message": {
+        "jp": "現金が不足しています",
+        "en": "Not enough money."
+    }
+}

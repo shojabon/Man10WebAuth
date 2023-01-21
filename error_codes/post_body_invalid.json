@@ -1,0 +1,7 @@
+{
+    "code": 422,
+    "message": {
+        "jp": "JSONリクエストが不当です",
+        "en": "Invalid JSON post body."
+    }
+}

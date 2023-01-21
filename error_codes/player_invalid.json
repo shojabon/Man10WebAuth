@@ -1,0 +1,7 @@
+{
+    "code": 404,
+    "message": {
+        "jp": "プレイヤーが存在しません",
+        "en": "Player doesn't exist."
+    }
+}

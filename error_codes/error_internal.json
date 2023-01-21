@@ -1,0 +1,7 @@
+{
+    "code": 500,
+    "message": {
+        "jp": "内部エラーが発生しました",
+        "en": "Internal error occurred."
+    }
+}

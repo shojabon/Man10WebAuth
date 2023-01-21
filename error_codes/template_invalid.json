@@ -1,0 +1,7 @@
+{
+    "code": 404,
+    "message": {
+        "jp": "テンプレートが存在しません",
+        "en": "Template doesn't exist."
+    }
+}

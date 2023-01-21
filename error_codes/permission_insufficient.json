@@ -1,0 +1,7 @@
+{
+    "code": 500,
+    "message": {
+        "jp": "権限がありません",
+        "en": "You do not have permission"
+    }
+}
