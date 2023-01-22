@@ -7,12 +7,11 @@ from utils.JsonSchemaWrapper import flask_json_schema
 from utils.MatResponseWrapper import flask_mat_response_wrapper
 
 if TYPE_CHECKING:
-    from Man10WebAuth import Man10WebAuthMethods
-
+    from Man10WebAuth.methods.sub_methods import Man10WebAuthPrivateMethods
 
 class UpdateInformationMethod:
 
-    def __init__(self, methods: Man10WebAuthMethods):
+    def __init__(self, methods: Man10WebAuthPrivateMethods):
         self.methods = methods
         self.schema = {
             "type": "object",

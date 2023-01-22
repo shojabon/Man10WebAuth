@@ -5,7 +5,8 @@ from flask import Flask
 from pymongo import MongoClient
 
 from Man10WebAuth.manager.Man10WebAuthAPI import Man10WebAuthAPI
-from Man10WebAuth.methods import Man10WebAuthMethods
+from Man10WebAuth.methods.public_methods import Man10WebAuthPublicMethods
+from Man10WebAuth.methods.sub_methods import Man10WebAuthPrivateMethods
 
 
 class Man10WebAuth:
@@ -32,7 +33,8 @@ class Man10WebAuth:
         # print(self.api.login("Sho0", "test"))
         # print(self.api.logout("a83b045d-9b45-48bb-b2b9-463e73a9024a"))
 
-        self.methods = Man10WebAuthMethods(self)
+        self.methods_public = Man10WebAuthPublicMethods(self)
+        self.methods_private = Man10WebAuthPrivateMethods(self)
 
         self.flask.run("0.0.0.0", self.config["hostPort"], threaded=True)
         self.running = False

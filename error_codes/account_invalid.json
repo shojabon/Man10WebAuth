@@ -1,0 +1,7 @@
+{
+    "code": 404,
+    "message": {
+        "jp": "アカウントが存在しません",
+        "en": "Account doesn't exist."
+    }
+}

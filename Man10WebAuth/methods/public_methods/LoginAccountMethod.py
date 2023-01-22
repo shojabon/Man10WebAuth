@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import traceback
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from utils.JsonSchemaWrapper import flask_json_schema
 from utils.MatResponseWrapper import flask_mat_response_wrapper
 
 if TYPE_CHECKING:
-    from Man10WebAuth.methods.shop import Man10WebAuthMethods
+    from Man10WebAuth.methods import Man10WebAuthMethods
 
 
 class LoginAccountMethod:
