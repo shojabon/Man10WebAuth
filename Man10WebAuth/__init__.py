@@ -3,7 +3,7 @@ import json
 import pymongo
 from flask import Flask
 from pymongo import MongoClient
-
+from flask_cors import CORS
 from Man10WebAuth.manager.Man10WebAuthAPI import Man10WebAuthAPI
 from Man10WebAuth.methods.public_methods import Man10WebAuthPublicMethods
 from Man10WebAuth.methods.sub_methods import Man10WebAuthPrivateMethods
@@ -14,6 +14,7 @@ class Man10WebAuth:
     def __init__(self):
         # variables
         self.flask = Flask(__name__)
+        CORS(self.flask, resources={'/*': {'origins': 'http://localhost:3000'}})
         self.running = True
         self.flask.url_map.strict_slashes = False
         self.config = {}

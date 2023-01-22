@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from flask import Blueprint
 
+from Man10WebAuth.methods.public_methods.IsJWTValidMethod import IsJWTValidMethod
 from Man10WebAuth.methods.public_methods.LoginAccountMethod import LoginAccountMethod
 
 if TYPE_CHECKING:
@@ -17,5 +18,6 @@ class Man10WebAuthPublicMethods:
         self.blueprint = Blueprint('auth_public', __name__,url_prefix="/public")
 
         LoginAccountMethod(self)
+        IsJWTValidMethod(self)
 
         self.main.flask.register_blueprint(self.blueprint)

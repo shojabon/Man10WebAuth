@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime
+import hashlib
 import json
 import traceback
 import uuid
@@ -20,10 +21,24 @@ class Man10WebAuthAPI:
     def __init__(self, main: Man10WebAuth):
         self.main = main
 
+    def hash_string(self, string: str):
+        hash1 = hashlib.sha1()
+        hash1.update(str(string + "Man10Auth").encode("utf-8"))
+        hash1 = hash1.hexdigest()
+        hash2 = hashlib.sha1()
+        hash2.update(str("Man10Auth" + string).encode("utf-8"))
+        hash2 = hash2.hexdigest()
+
+        hash3 = "".join([hash1[x] + hash2[x] for x in range(len(hash1))])
+        result = hashlib.sha1()
+        result.update(hash3.encode("utf-8"))
+        return result.hexdigest()
+
     def get_minecraft_player(self, mcid: str):
         cache = self.main.mongo["man10_web_auth"]["mcid_uuid"].find_one({"name": mcid})
         if cache is not None:
-            if datetime.datetime.now().timestamp() - cache["requestTime"].timestamp() < self.main.config["mojangAPICacheTTL"]:
+            if datetime.datetime.now().timestamp() - cache["requestTime"].timestamp() < self.main.config[
+                "mojangAPICacheTTL"]:
                 del cache["_id"]
                 if cache["id"] is None:
                     return None
@@ -37,7 +52,8 @@ class Man10WebAuthAPI:
         username_request = json.loads(username_request.text)
         username_request["requestTime"] = datetime.datetime.now()
         username_request["id"] = str(uuid.UUID(hex=username_request["id"]))
-        self.main.mongo["man10_web_auth"]["mcid_uuid"].update_one({"id": username_request["id"]}, {"$set": username_request})
+        self.main.mongo["man10_web_auth"]["mcid_uuid"].update_one({"id": username_request["id"]},
+                                                                  {"$set": username_request})
         return username_request
 
     def http_request(self, path: str, method: str = "POST", payload: dict = None,
@@ -52,7 +68,7 @@ class Man10WebAuthAPI:
                                     data=payload)
             if method == "DELETE":
                 req = requests.delete(self.main.config["kongEndpoint"] + path,
-                                    data=payload)
+                                      data=payload)
             if req.text == "":
                 return None
 
@@ -64,7 +80,7 @@ class Man10WebAuthAPI:
             traceback.print_exc()
             return None
 
-    def get_user_object(self, minecraft_uuid: str=None, username: str=None, kong_id: str=None):
+    def get_user_object(self, minecraft_uuid: str = None, username: str = None, kong_id: str = None):
         try:
             query = {}
             if minecraft_uuid is not None:
@@ -92,7 +108,7 @@ class Man10WebAuthAPI:
             }, {
                 "$set": {
                     "username": username,
-                    "password": password
+                    "password": self.hash_string(password)
                 }
             }, upsert=True)
 
@@ -132,13 +148,10 @@ class Man10WebAuthAPI:
             minecraft_player = self.get_minecraft_player(name)
             if minecraft_player is None:
                 return "minecraft_account_invalid", None
-            print({
-                "minecraftUUID": minecraft_player["id"],
-                "password": password
-            })
+
             result = self.main.mongo["man10_web_auth"]["accounts"].find_one({
                 "minecraftUUID": minecraft_player["id"],
-                "password": password
+                "password": self.hash_string(password)
             })
             if result is None:
                 return "account_invalid", None
@@ -147,12 +160,13 @@ class Man10WebAuthAPI:
             jwt_token = jwt.encode({
                 "iss": jwt_request["key"],
                 "minecraftUUID": result["minecraftUUID"],
+                "minecraftName": result["username"],
                 "exp": round(datetime.datetime.now().timestamp() + self.main.config["jwtExpiration"])
             }, jwt_request["secret"])
             return "success", jwt_token
         except Exception:
             traceback.print_exc()
-            return "error_internal",None
+            return "error_internal", None
 
     def logout(self, minecraft_username: str):
         try:
@@ -173,7 +187,7 @@ class Man10WebAuthAPI:
             return "success", True
         except Exception:
             traceback.print_exc()
-            return "error_internal",False
+            return "error_internal", False
 
     def update_information(self, minecraft_username: str, data: dict):
         try:
