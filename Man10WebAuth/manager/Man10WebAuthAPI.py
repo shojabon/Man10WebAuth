@@ -154,8 +154,13 @@ class Man10WebAuthAPI:
             traceback.print_exc()
             return "error_internal",None
 
-    def logout(self, minecraft_uuid: str):
+    def logout(self, minecraft_username: str):
         try:
+            minecraft_player = self.get_minecraft_player(minecraft_username)
+            if minecraft_player is None:
+                return "minecraft_account_invalid", None
+            minecraft_uuid = minecraft_player["id"]
+
             request_result, user_data = self.get_user_object(minecraft_uuid=minecraft_uuid)
             if user_data is None:
                 return request_result, False
@@ -170,8 +175,12 @@ class Man10WebAuthAPI:
             traceback.print_exc()
             return "error_internal",False
 
-    def update_information(self, minecraft_uuid: str, data: dict):
+    def update_information(self, minecraft_username: str, data: dict):
         try:
+            minecraft_player = self.get_minecraft_player(minecraft_username)
+            if minecraft_player is None:
+                return "minecraft_account_invalid", None
+            minecraft_uuid = minecraft_player["id"]
             request_status, user_object = self.get_user_object(minecraft_uuid)
             if user_object is None:
                 return "account_invalid", False

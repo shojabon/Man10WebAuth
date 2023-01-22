@@ -16,14 +16,14 @@ class UpdateInformationMethod:
         self.schema = {
             "type": "object",
             "properties": {
-                "minecraftUUID": {
+                "minecraftUsername": {
                     "type": "string"
                 },
                 "data": {
                     "type": "object"
                 }
             },
-            "required": ["minecraftUUID", "data"]
+            "required": ["minecraftUsername", "data"]
         }
 
         self.register_endpoint()
@@ -34,10 +34,10 @@ class UpdateInformationMethod:
         @flask_json_schema(self.schema)
         def update_info(json_body: dict):
             try:
-                result = self.methods.main.api.update_information(json_body["minecraft_uuid"], json_body["data"])
+                result = self.methods.main.api.update_information(json_body["minecraft_username"], json_body["data"])
                 if not result[1]:
                     return result[0]
-                self.methods.main.api.logout(json_body["minecraft_uuid"])
+                self.methods.main.api.logout(json_body["minecraft_username"])
                 return "success", result[1]
             except Exception as e:
                 traceback.print_exc()
